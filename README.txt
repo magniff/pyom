@@ -1,6 +1,7 @@
 Python Object Massacre (PyOM)
 
 Simple ctypes hack, which gives you direct control under python objects`s memory
+via injected into common base class AKA object the 'dump' attribute.
 
 >>> import pyom
 >>> pyom.activate()
@@ -21,6 +22,8 @@ Simple ctypes hack, which gives you direct control under python objects`s memory
 10 0
 11 0
 12 100
+>>> (100).dump[:20].index(100)
+12
 >>> (100).dump[12] = 200
 >>> 100
 200
