@@ -3,6 +3,7 @@ Python Object Massacre (PyOM)
 Simple ctypes hack, which gives you direct control under python objects`s memory
 via injected into common base class AKA object the 'dump' attribute.
 
+Lets hack int 100 to be 200:
 >>> import pyom
 >>> pyom.activate()
 >>>
@@ -29,3 +30,20 @@ via injected into common base class AKA object the 'dump' attribute.
 200
 >>> 100+100
 400
+
+Another example:
+>>> word = 'hello world'
+>>> word.dump[:100].index(ord('h'))
+24
+>>> word.dump[:100].index(ord('e'))
+25
+>>> word.dump[:100].index(ord('l'))
+26
+>>> word.dump[24]=ord('c')
+>>> word.dump[25]=ord('r')
+>>> word.dump[26]=ord('u')
+>>> word.dump[27]=ord('e')
+>>> word.dump[28]=ord('l')
+>>> word
+'cruel world'
+>>>
