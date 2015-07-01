@@ -33,8 +33,8 @@ class TestIntHack(unittest.TestCase):
 
     # this hacks value of int 100 to be 200
     def test_value_hack(self):
-        index = (100).dump[:20].index(100)
-        (100).dump[index] = 200
+        index = getattr(100, pyom.ATTR_TO_INJECT)[:20].index(100)
+        getattr(100, pyom.ATTR_TO_INJECT)[index] = 200
         self.assertEqual(100, 200)
 
 

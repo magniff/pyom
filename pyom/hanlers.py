@@ -41,7 +41,8 @@ class Bytes(Setter):
         super().__set__(obj, value)
 
 
-class Chunk(metaclass=ChunkMeta):
+class ChunkSetter(metaclass=ChunkMeta):
+
     shift = NotNegativeInteger()
     data = Bytes()
 

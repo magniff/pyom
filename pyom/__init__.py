@@ -1,8 +1,8 @@
 import ctypes
-from pyom.memio import BaseMemIO, Chunk
+from pyom.memio import BaseMemIO, ChunkSetter as Chunk
 
 
-ATTR_TO_INJECT = 'dump'
+ATTR_TO_INJECT = 'memory'
 
 
 object_dict = ctypes.cast(
