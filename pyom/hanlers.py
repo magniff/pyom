@@ -12,8 +12,8 @@ class ChunkMeta(type):
 
 class Setter:
 
-    def __get__(self, obj, klass=None):
-        pass
+    def __get__(self, obj, _=None):
+        return obj.__dict__[self.field_name]
 
     def __set__(self, obj, value):
         obj.__dict__[self.field_name] = value
@@ -41,11 +41,15 @@ class Bytes(Setter):
         super().__set__(obj, value)
 
 
-class ChunkSetter(metaclass=ChunkMeta):
+class BaseChunkSetter(metaclass=ChunkMeta):
 
     shift = NotNegativeInteger()
     data = Bytes()
 
-    def __init__(self, shift, data):
+    def _dump_data(self, pointer):
+        for index, value in enumerate(self.data, self.shift):
+            pointer[index] = value
+
+    def __init__(self, *, shift, data):
         self.shift = shift
         self.data = data

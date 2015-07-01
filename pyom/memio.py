@@ -1,10 +1,10 @@
 import ctypes
 import logging
 
-from .hanlers import ChunkSetter
+from .hanlers import BaseChunkSetter
 
 
-class PointerProxy:
+class BaseChunkProxy:
 
     def __repr__(self):
         return "<Entity '%s' -> [%s, ...]>" % (
@@ -32,16 +32,20 @@ class BaseMemIO:
     object`s (common base class) dictionary. Normally this is impossible, so we
     need to do a little trick.
     """
+
+    GETTER = BaseChunkProxy
+    SETTER = BaseChunkSetter
+
     def _get_pointer(self, obj):
         return ctypes.cast(id(obj), ctypes.POINTER(ctypes.c_ubyte))
 
     def __get__(self, obj, _=None):
-        return PointerProxy(obj, self._get_pointer(obj))
+        return self.GETTER(obj, self._get_pointer(obj))
 
     def __set__(self, obj, chunk_object):
-        if not isinstance(chunk_object, ChunkSetter):
-            raise ValueError('%s is not instance of Chunk.' % chunk_object)
+        if not isinstance(chunk_object, self.SETTER):
+            raise TypeError(
+                '%s is not instance of %s.' % (chunk_object, self.SETTER)
+            )
 
-        pointer = self._get_pointer(obj)
-        for index, value in enumerate(chunk_object.data, chunk_object.shift):
-            pointer[index] = value
+        chunk_object._dump_data(self._get_pointer(obj))

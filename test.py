@@ -6,16 +6,16 @@ class TestChunk(unittest.TestCase):
 
     def test_set(self):
         def assign_negative_shift():
-            pyom.Chunk(-10, [1, 2, 3])
+            pyom.Chunk(shift=-10, data=[1, 2, 3])
 
         def assign_non_iterable_data():
-            pyom.Chunk(10, 10)
+            pyom.Chunk(shift=10, data=10)
 
         def assign_non_int_data():
-            pyom.Chunk(10, ['hello', 10])
+            pyom.Chunk(shift=10, data=['hello', 10])
 
         def assign_data_to_big():
-            pyom.Chunk(10, [10, 10000])
+            pyom.Chunk(shift=10, data=[10, 10000])
 
         self.assertRaises(ValueError, assign_negative_shift)
         self.assertRaises(ValueError, assign_non_iterable_data)
