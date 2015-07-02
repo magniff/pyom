@@ -61,18 +61,14 @@ class TestIntHack(unittest.TestCase):
         self.assertTrue(repr(obj) == 'tint object')
 
     def test_dump_attr_presents(self):
-        self.assertTrue(
-            hasattr(object, pyom.ATTR_TO_INJECT),
-            'Fail to inject attr %s' % pyom.ATTR_TO_INJECT
-        )
+        self.assertTrue(hasattr(object, 'memory'))
 
     def test_value_hack(self):
-        index = getattr(100, pyom.ATTR_TO_INJECT)[:20].index(100)
-        getattr(100, pyom.ATTR_TO_INJECT)[index] = 200
+        index = (100).memory[:20].index(100)
+        (100).memory[index] = 200
         self.assertEqual(100, 200)
 
 
 if __name__ == '__main__':
-    pyom.activate()
-    unittest.main()
-    pyom.deactivate()
+    with pyom.wonderland():
+        unittest.main()
