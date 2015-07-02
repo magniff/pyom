@@ -1,28 +1,24 @@
-import ctypes
+import sys
+from .getsets import BaseMemoryChunk
+from .exceptions import BoundaryError
 
-from .getsets import BaseChunkSetter, BaseChunkGetter
 
-
-class BaseMemIO:
+class ObjectMemoryIO:
     """This is simple descriptor, which instance we are going to inject into
     object`s (common base class) dictionary. Normally this is impossible, so we
     need to do a little trick.
     """
-
-    GETTER = BaseChunkGetter
-    SETTER = BaseChunkSetter
-
-    @staticmethod
-    def _get_pointer(obj):
-        return ctypes.cast(id(obj), ctypes.POINTER(ctypes.c_ubyte))
+    CHUNK_HANDLER = BaseMemoryChunk
 
     def __get__(self, obj, _=None):
-        return self.GETTER(obj, self._get_pointer(obj))
+        return self.CHUNK_HANDLER(address=id(obj), length=sys.getsizeof(obj))
 
-    def __set__(self, obj, chunk_object):
-        if not isinstance(chunk_object, self.SETTER):
-            raise TypeError(
-                '%s is not instance of %s.' % (chunk_object, self.SETTER)
-            )
+    def __set__(self, obj, value):
+        shift, data = value
+        chunk = self.CHUNK_HANDLER(id(obj), sys.getsizeof(obj))
 
-        chunk_object.dump_data(self._get_pointer(obj))
+        if shift + len(data) > chunk.length:
+            raise BoundaryError(chunk)
+
+        for index, byte_to_set in enumerate(data, shift):
+            chunk[index] = byte_to_set

@@ -1,26 +1,38 @@
-import sys
-from collections.abc import Iterable
+import ctypes
+from .allocators import malloc, free
+from .exceptions import BoundaryError
 
 
 class ChunkMeta(type):
 
     def __new__(cls, name, bases, attrs):
         for name, value in attrs.items():
-            if isinstance(value, Setter):
+            if isinstance(value, Attribute):
                 value.field_name = name
         return super().__new__(cls, name, bases, attrs)
 
 
-class Setter:
+class Attribute:
+
+    def __init__(self):
+        self._inited = False
 
     def __get__(self, obj, _=None):
         return obj.__dict__[self.field_name]
 
     def __set__(self, obj, value):
         obj.__dict__[self.field_name] = value
+        self._inited = True
 
 
-class NotNegativeInteger(Setter):
+class AttributeFrontend(Attribute):
+
+    def __set__(self, obj, value):
+        if obj.__dict__.get(self.field_name) is None:
+            super().__set__(obj, value)
+
+
+class _NotNegativeInteger(Attribute):
 
     def __set__(self, obj, value):
         if isinstance(value, int) and value >= 0:
@@ -29,54 +41,58 @@ class NotNegativeInteger(Setter):
             raise ValueError('%s is not NotNegativeInteger.' % value)
 
 
-class Bytes(Setter):
-
-    @staticmethod
-    def _check(value):
-        if not isinstance(value, Iterable):
-            raise ValueError('%s is not iterable.' % value)
-        if not all([isinstance(item, int) and item < 256 for item in value]):
-            raise ValueError('%s is not valid byte array.' % value)
-
-    def __set__(self, obj, value):
-        self._check(value)
-        super().__set__(obj, value)
+class NotNegativeInteger(AttributeFrontend, _NotNegativeInteger):
+    pass
 
 
-class BaseChunkSetter(metaclass=ChunkMeta):
+class BaseMemoryChunk(metaclass=ChunkMeta):
 
-    shift = NotNegativeInteger()
-    data = Bytes()
+    address = NotNegativeInteger()
+    length = NotNegativeInteger()
 
-    def dump_data(self, pointer):
-        for index, value in enumerate(self.data, self.shift):
-            pointer[index] = value
+    def copy_from_chunk(self, chunk):
+        for index, value in enumerate(chunk):
+            self[index] = value
 
-    def __init__(self, *, shift, data):
-        self.shift = shift
-        self.data = data
+    def clone(self, allocator=malloc):
+        chunk = allocator(self.length, self.__class__)
+        for index, value in enumerate(self):
+            chunk[index] = value
+        return chunk
 
-
-class BaseChunkGetter:
-
-    @property
-    def length(self):
-        return sys.getsizeof(self.entity)
+    def __eq__(self, other):
+        return type(self) == type(other) and all([
+            self.length == other.length,
+            self._pointer[:self.length] == other._pointer[:other.length]
+        ])
 
     def __repr__(self):
-        return "<Entity '%s' -> [%s, ...]>" % (
-            self.entity, ', '.join(str(item) for item in self.pointer[:5])
+        return "<Chunk addr=%s and data=[%s, ...]>" % (
+            self.address, ', '.join(str(item) for item in self._pointer[:5])
         )
 
-    def __iter__(self):
-        return iter(self.pointer[:self.length])
-
     def __getitem__(self, item):
-        return self.pointer.__getitem__(item)
+        if isinstance(item, int):
+            if item < 0 or item >= self.length:
+                raise BoundaryError(self)
+        elif isinstance(item, slice):
+            # implement for slices
+            pass
+        else:
+            raise TypeError()
 
-    def __setitem__(self, item_name, item_value):
-        self.pointer.__setitem__(item_name, item_value)
+        return self._pointer.__getitem__(item)
 
-    def __init__(self, entity, pointer):
-        self.entity = entity
-        self.pointer = pointer
+    def __setitem__(self, item, value):
+        if item < 0 or item >= self.length:
+            raise BoundaryError(self)
+
+        return self._pointer.__setitem__(item, value)
+
+    def __iter__(self):
+        return iter(self._pointer[:self.length])
+
+    def __init__(self, address, length, c_type=ctypes.c_ubyte):
+        self.address = address
+        self.length = length
+        self._pointer = ctypes.cast(address, ctypes.POINTER(c_type))

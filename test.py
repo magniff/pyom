@@ -2,25 +2,41 @@ import unittest
 import pyom
 
 
-class TestChunk(unittest.TestCase):
+class TestChunkBasics(unittest.TestCase):
 
-    def test_set(self):
-        def assign_negative_shift():
-            pyom.Chunk(shift=-10, data=[1, 2, 3])
+    def test_attrs(self):
+        chunk = pyom.Chunk(id(int), 10)
+        self.assertTrue(hasattr(chunk, 'length'))
+        self.assertTrue(hasattr(chunk, 'address'))
 
-        def assign_non_iterable_data():
-            pyom.Chunk(shift=10, data=10)
+    def test_boundary_check_get(self):
+        self.assertRaises(pyom.BoundaryError, lambda: (100).memory[100])
+        self.assertRaises(pyom.BoundaryError, lambda: (100).memory[-1])
 
-        def assign_non_int_data():
-            pyom.Chunk(shift=10, data=['hello', 10])
+    def test_boundary_check_set(self):
+        def set_too_big():
+            (100).memory[100] = 10
 
-        def assign_data_to_big():
-            pyom.Chunk(shift=10, data=[10, 10000])
+        def set_negative():
+            (100).memory[-1] = 10
 
-        self.assertRaises(ValueError, assign_negative_shift)
-        self.assertRaises(ValueError, assign_non_iterable_data)
-        self.assertRaises(ValueError, assign_non_int_data)
-        self.assertRaises(ValueError, assign_data_to_big)
+        self.assertRaises(pyom.BoundaryError, set_too_big)
+        self.assertRaises(pyom.BoundaryError, set_negative)
+
+    def test_clone(self):
+        chunk0 = (100).memory
+        chunk1 = chunk0.clone()
+        self.assertEqual(chunk0, chunk1)
+
+
+class TestHandlerBasics(unittest.TestCase):
+
+    def test_memory_handler_type(self):
+        self.assertTrue(isinstance((100).memory, pyom.Chunk))
+
+    def test_attrs(self):
+        self.assertTrue(hasattr((100).memory, 'length'))
+        self.assertTrue(hasattr((100).memory, 'address'))
 
 
 class TestIntHack(unittest.TestCase):
@@ -31,15 +47,16 @@ class TestIntHack(unittest.TestCase):
             def __repr__(self):
                 return 'tint object'
 
+        obj = 100
+
+        chunk_original = obj.memory
+        chunk_copy = chunk_original.clone()
+
         id_of_int = pyom.integer_to_memory(id(int))
         id_of_tint = pyom.integer_to_memory(id(Tint))
 
-        obj = 100
-
-        index = getattr(obj, pyom.ATTR_TO_INJECT)[:100].index(id_of_int[0])
-        setattr(
-            obj, pyom.ATTR_TO_INJECT, pyom.Chunk(shift=index, data=id_of_tint)
-        )
+        index = chunk_original[:100].index(id_of_int[0])
+        obj.memory = (index, id_of_tint)
         self.assertTrue(isinstance(obj, Tint))
         self.assertTrue(repr(obj) == 'tint object')
 
