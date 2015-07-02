@@ -69,7 +69,7 @@ class BaseChunkGetter:
         )
 
     def __iter__(self):
-        raise RuntimeError('Bad idea, dude. Use slices instead.')
+        return iter(self.pointer[:self.length])
 
     def __getitem__(self, item):
         return self.pointer.__getitem__(item)

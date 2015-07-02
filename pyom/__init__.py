@@ -1,3 +1,3 @@
 from .frontend import activate, deactivate, ATTR_TO_INJECT
 from .getsets import BaseChunkSetter as Chunk
-from .utils import integer_to_memory
+from .utils import integer_to_memory, malloc, free
