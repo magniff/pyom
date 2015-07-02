@@ -25,13 +25,36 @@ class TestChunk(unittest.TestCase):
 
 class TestIntHack(unittest.TestCase):
 
+    # hacks 100 to be another then int class
+    def test_int_class_swap(self):
+        class Tint(int):
+            def __repr__(self):
+                return 'tint object'
+
+        id_of_int = pyom.integer_to_memory(id(int))
+        id_of_tint = pyom.integer_to_memory(id(Tint))
+
+        obj = 100
+
+        index = getattr(obj, pyom.ATTR_TO_INJECT)[:100].index(id_of_int[0])
+        setattr(
+            obj, pyom.ATTR_TO_INJECT, pyom.Chunk(shift=index, data=id_of_tint)
+        )
+        self.assertTrue(isinstance(obj, Tint))
+        self.assertTrue(repr(obj) == 'tint object')
+
+    def test_boundary_check(self):
+        self.assertRaises(
+            pyom.BoundaryError,
+            lambda: getattr(100, pyom.ATTR_TO_INJECT)[200]
+        )
+
     def test_dump_attr_presents(self):
         self.assertTrue(
             hasattr(object, pyom.ATTR_TO_INJECT),
             'Fail to inject attr %s' % pyom.ATTR_TO_INJECT
         )
 
-    # this hacks value of int 100 to be 200
     def test_value_hack(self):
         index = getattr(100, pyom.ATTR_TO_INJECT)[:20].index(100)
         getattr(100, pyom.ATTR_TO_INJECT)[index] = 200

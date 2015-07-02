@@ -1,6 +1,7 @@
 import ctypes
-import logging
+import sys
 
+from .exceptions import BoundaryError
 from .hanlers import BaseChunkSetter
 
 
@@ -12,11 +13,16 @@ class BaseChunkProxy:
         )
 
     def __iter__(self):
-        logging.warn('Bad idea, srsly use slices!')
-        logging.warn('Request skipped.')
-        return iter(tuple())
+        raise RuntimeError('Bad idea, dude. Use slices instead.')
 
     def __getitem__(self, item):
+        if isinstance(item, int):
+            if item > sys.getsizeof(self.entity) or item < 0:
+                raise BoundaryError(self.entity, item)
+        elif isinstance(item, slice):
+            # @todo: IMPLEMENT ME
+            pass
+
         return self.pointer.__getitem__(item)
 
     def __setitem__(self, item_name, item_value):
