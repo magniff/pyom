@@ -1,36 +1,6 @@
 import ctypes
-import sys
 
-from .exceptions import BoundaryError
-from .hanlers import BaseChunkSetter
-
-
-class BaseChunkProxy:
-
-    def __repr__(self):
-        return "<Entity '%s' -> [%s, ...]>" % (
-            self.entity, ', '.join(str(item) for item in self.pointer[:5])
-        )
-
-    def __iter__(self):
-        raise RuntimeError('Bad idea, dude. Use slices instead.')
-
-    def __getitem__(self, item):
-        if isinstance(item, int):
-            if item > sys.getsizeof(self.entity) or item < 0:
-                raise BoundaryError(self.entity, item)
-        elif isinstance(item, slice):
-            # @todo: IMPLEMENT ME
-            pass
-
-        return self.pointer.__getitem__(item)
-
-    def __setitem__(self, item_name, item_value):
-        self.pointer.__setitem__(item_name, item_value)
-
-    def __init__(self, entity, pointer):
-        self.entity = entity
-        self.pointer = pointer
+from .getsets import BaseChunkSetter, BaseChunkGetter
 
 
 class BaseMemIO:
@@ -39,10 +9,11 @@ class BaseMemIO:
     need to do a little trick.
     """
 
-    GETTER = BaseChunkProxy
+    GETTER = BaseChunkGetter
     SETTER = BaseChunkSetter
 
-    def _get_pointer(self, obj):
+    @staticmethod
+    def _get_pointer(obj):
         return ctypes.cast(id(obj), ctypes.POINTER(ctypes.c_ubyte))
 
     def __get__(self, obj, _=None):
@@ -54,4 +25,4 @@ class BaseMemIO:
                 '%s is not instance of %s.' % (chunk_object, self.SETTER)
             )
 
-        chunk_object._dump_data(self._get_pointer(obj))
+        chunk_object.dump_data(self._get_pointer(obj))

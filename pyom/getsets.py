@@ -1,3 +1,4 @@
+import sys
 from collections.abc import Iterable
 
 
@@ -30,7 +31,8 @@ class NotNegativeInteger(Setter):
 
 class Bytes(Setter):
 
-    def _check(self, value):
+    @staticmethod
+    def _check(value):
         if not isinstance(value, Iterable):
             raise ValueError('%s is not iterable.' % value)
         if not all([isinstance(item, int) and item < 256 for item in value]):
@@ -46,10 +48,35 @@ class BaseChunkSetter(metaclass=ChunkMeta):
     shift = NotNegativeInteger()
     data = Bytes()
 
-    def _dump_data(self, pointer):
+    def dump_data(self, pointer):
         for index, value in enumerate(self.data, self.shift):
             pointer[index] = value
 
     def __init__(self, *, shift, data):
         self.shift = shift
         self.data = data
+
+
+class BaseChunkGetter:
+
+    @property
+    def length(self):
+        return sys.getsizeof(self.entity)
+
+    def __repr__(self):
+        return "<Entity '%s' -> [%s, ...]>" % (
+            self.entity, ', '.join(str(item) for item in self.pointer[:5])
+        )
+
+    def __iter__(self):
+        raise RuntimeError('Bad idea, dude. Use slices instead.')
+
+    def __getitem__(self, item):
+        return self.pointer.__getitem__(item)
+
+    def __setitem__(self, item_name, item_value):
+        self.pointer.__setitem__(item_name, item_value)
+
+    def __init__(self, entity, pointer):
+        self.entity = entity
+        self.pointer = pointer

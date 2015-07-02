@@ -43,12 +43,6 @@ class TestIntHack(unittest.TestCase):
         self.assertTrue(isinstance(obj, Tint))
         self.assertTrue(repr(obj) == 'tint object')
 
-    def test_boundary_check(self):
-        self.assertRaises(
-            pyom.BoundaryError,
-            lambda: getattr(100, pyom.ATTR_TO_INJECT)[200]
-        )
-
     def test_dump_attr_presents(self):
         self.assertTrue(
             hasattr(object, pyom.ATTR_TO_INJECT),
