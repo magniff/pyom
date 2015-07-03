@@ -8,7 +8,7 @@ def _select_libc():
     if 'win' in sys.platform.lower():
         dll = ctypes.CDLL('msvcrt')
     else:
-        dll = ctypes.CDLL('libc')
+        dll = ctypes.CDLL('libc.so.6')
     return dll
 
 
