@@ -64,9 +64,9 @@ class TestIntHack(unittest.TestCase):
         self.assertTrue(hasattr(object, 'memory'))
 
     def test_value_hack(self):
-        index = (100).memory[:20].index(100)
-        (100).memory[index] = 200
-        self.assertEqual(100, 200)
+        index = (111).memory[:20].index(111)
+        (111).memory[index] = 222
+        self.assertEqual(111, 222)
 
 
 if __name__ == '__main__':
