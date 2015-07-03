@@ -58,7 +58,13 @@ class BaseMemoryChunk(metaclass=ChunkMeta):
         chunk = allocator(self.length, self.__class__)
         for index, value in enumerate(self):
             chunk[index] = value
+        chunk._is_heap_allocated = True
         return chunk
+
+    def free(self, free_routine=free):
+        if self._is_heap_allocated:
+            free_routine(self.address)
+        self._is_heap_allocated = False
 
     def __eq__(self, other):
         return type(self) == type(other) and all([
@@ -75,12 +81,6 @@ class BaseMemoryChunk(metaclass=ChunkMeta):
         if isinstance(item, int):
             if item < 0 or item >= self.length:
                 raise BoundaryError(self)
-        elif isinstance(item, slice):
-            # implement for slices
-            pass
-        else:
-            raise TypeError()
-
         return self._pointer.__getitem__(item)
 
     def __setitem__(self, item, value):
@@ -95,4 +95,8 @@ class BaseMemoryChunk(metaclass=ChunkMeta):
     def __init__(self, address, length, c_type=ctypes.c_ubyte):
         self.address = address
         self.length = length
+        self._is_heap_allocated = False
         self._pointer = ctypes.cast(address, ctypes.POINTER(c_type))
+
+    def __del__(self):
+        self.free()

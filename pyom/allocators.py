@@ -2,6 +2,8 @@ import ctypes
 import functools
 import sys
 
+from .exceptions import InsufficientMemory
+
 
 @functools.lru_cache(maxsize=None)
 def _select_libc():
@@ -13,7 +15,12 @@ def _select_libc():
 
 
 def malloc(count, chunk_class):
-    return chunk_class(_select_libc().malloc(count), count)
+    address = _select_libc().malloc(count)
+
+    if not address:
+        raise InsufficientMemory(count)
+
+    return chunk_class(address, count)
 
 
 def free(address):

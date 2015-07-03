@@ -28,6 +28,9 @@ class TestChunkBasics(unittest.TestCase):
         chunk1 = chunk0.clone()
         self.assertEqual(chunk0, chunk1)
 
+    def test_not_equal(self):
+        self.assertNotEqual((100).memory, 'helloworld'.memory)
+
 
 class TestHandlerBasics(unittest.TestCase):
 

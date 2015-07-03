@@ -10,18 +10,18 @@ OBJECT_DICT = ctypes.cast(
 )
 
 
-def _activate(memory_viewer=None):
+def activate(memory_viewer=None):
     OBJECT_DICT[0][ATTR_TO_INJECT] = (
         memory_viewer() if memory_viewer else ObjectMemoryIO()
     )
 
 
-def _deactivate():
+def deactivate():
     del OBJECT_DICT[0][ATTR_TO_INJECT]
 
 
 @contextlib.contextmanager
 def pyom_context():
-    _activate()
+    activate()
     yield
-    _deactivate()
+    deactivate()
