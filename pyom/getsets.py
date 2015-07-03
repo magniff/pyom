@@ -1,5 +1,5 @@
 import ctypes
-from .allocators import malloc, free
+from .allocators import malloc, free, memcpy
 from .exceptions import BoundaryError
 
 
@@ -50,14 +50,12 @@ class BaseMemoryChunk(metaclass=ChunkMeta):
     address = NotNegativeInteger()
     length = NotNegativeInteger()
 
-    def copy_from_chunk(self, chunk):
-        for index, value in enumerate(chunk):
-            self[index] = value
+    def copy_from_chunk(self, chunk, copier=memcpy):
+        copier(self, chunk)
 
-    def clone(self, allocator=malloc):
+    def clone(self, allocator=malloc, copier=memcpy):
         chunk = allocator(self.length, self.__class__)
-        for index, value in enumerate(self):
-            chunk[index] = value
+        copier(chunk, self)
         chunk._is_heap_allocated = True
         return chunk
 

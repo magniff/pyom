@@ -31,6 +31,9 @@ Lets hack int 100 to be 200:
 >>> 100+100
 400
 
+NOTE: this memory indexes are extremely low level, so they are actually depend
+on your platform and compiler. 
+
 Another example:
 >>> word = 'hello world'
 >>> word.memory[:100].index(ord('h'))

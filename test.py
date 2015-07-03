@@ -44,6 +44,11 @@ class TestHandlerBasics(unittest.TestCase):
 
 class TestIntHack(unittest.TestCase):
 
+    def test_simple_copy(self):
+        chunk0 = (100).memory
+        chunk1 = chunk0.clone()
+        self.assertTrue(chunk0 == chunk1)
+
     # hacks 100 to be another then int class
     def test_int_class_swap(self):
         class Tint(int):
@@ -58,10 +63,12 @@ class TestIntHack(unittest.TestCase):
         id_of_int = pyom.integer_to_memory(id(int))
         id_of_tint = pyom.integer_to_memory(id(Tint))
 
-        index = chunk_original[:100].index(id_of_int[0])
+        index = chunk_original[:50].index(id_of_int[0])
         obj.memory = (index, id_of_tint)
         self.assertTrue(isinstance(obj, Tint))
         self.assertTrue(repr(obj) == 'tint object')
+        obj.memory.copy_from_chunk(chunk_copy)
+        self.assertFalse(isinstance(obj, Tint))
 
     def test_dump_attr_presents(self):
         self.assertTrue(hasattr(object, 'memory'))

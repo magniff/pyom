@@ -1,21 +1,31 @@
 import ctypes
-import functools
 import sys
 
 from .exceptions import InsufficientMemory
 
 
-@functools.lru_cache(maxsize=None)
 def _select_libc():
-    if 'win' in sys.platform.lower():
+    platform = sys.platform.lower()
+    if 'win' in platform:
         dll = ctypes.CDLL('msvcrt')
-    else:
+    elif 'linux' in platform:
         dll = ctypes.CDLL('libc.so.6')
+    else:
+        raise RuntimeError('Your platform is not supported. Sorry.')
     return dll
 
 
+LIBC_REALIZATION = _select_libc()
+
+
+def memcpy(dest_chunk, source_chunk):
+    return LIBC_REALIZATION.memcpy(
+        dest_chunk.address, source_chunk.address, source_chunk.length
+    )
+
+
 def malloc(count, chunk_class):
-    address = _select_libc().malloc(count)
+    address = LIBC_REALIZATION.malloc(count)
 
     if not address:
         raise InsufficientMemory(count)
@@ -24,4 +34,4 @@ def malloc(count, chunk_class):
 
 
 def free(address):
-    return _select_libc().free(address)
+    return LIBC_REALIZATION.free(address)
