@@ -63,11 +63,6 @@ class TestIntHack(unittest.TestCase):
     def test_dump_attr_presents(self):
         self.assertTrue(hasattr(object, 'memory'))
 
-    def test_value_hack(self):
-        index = (111).memory[:20].index(111)
-        (111).memory[index] = 222
-        self.assertEqual(111, 222)
-
 
 if __name__ == '__main__':
     with pyom.wonderland():
