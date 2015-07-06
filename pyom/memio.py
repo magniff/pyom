@@ -1,4 +1,5 @@
 import sys
+
 from .getsets import BaseMemoryChunk
 from .exceptions import BoundaryError
 

@@ -18,9 +18,11 @@ def _select_libc():
 LIBC_REALIZATION = _select_libc()
 
 
-def memcpy(dest_chunk, source_chunk):
+def memcpy(dest_chunk, source_chunk, start=None, lenght=None):
+    start = 0 if start is None else start
     return LIBC_REALIZATION.memcpy(
-        dest_chunk.address, source_chunk.address, source_chunk.length
+        dest_chunk.address+start, source_chunk.address+start,
+        lenght is not None and lenght or source_chunk.length
     )
 
 

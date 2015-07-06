@@ -55,7 +55,7 @@ class TestIntHack(unittest.TestCase):
             def __repr__(self):
                 return 'tint object'
 
-        obj = 100
+        obj = 1000000
 
         chunk_original = obj.memory
         chunk_copy = chunk_original.clone()
