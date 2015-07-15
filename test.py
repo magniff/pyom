@@ -1,5 +1,6 @@
 import unittest
 import pyom
+from pyom.structures import PyFunctionObject
 
 
 class TestChunkBasics(unittest.TestCase):
@@ -72,6 +73,27 @@ class TestIntHack(unittest.TestCase):
 
     def test_dump_attr_presents(self):
         self.assertTrue(hasattr(object, 'memory'))
+
+
+class TestStructures(unittest.TestCase):
+
+    def test_func_hasattr(self):
+        def foo():
+            pass
+        foo_p = PyFunctionObject.from_object(foo)
+        self.assertTrue(hasattr(foo_p, 'ob_type'))
+
+    def test_func_ob_type(self):
+        def foo():
+            pass
+        foo_p = PyFunctionObject.from_object(foo)
+        self.assertTrue(foo_p.ob_type == id(type(foo)))
+
+    def test_func_ob_type_get_as_type(self):
+        def foo():
+            pass
+        foo_p = PyFunctionObject.from_object(foo)
+        self.assertTrue(foo_p.ob_type_o == type(foo))
 
 
 if __name__ == '__main__':
