@@ -1,6 +1,8 @@
 import unittest
+import ctypes
+import types
 import pyom
-from pyom.structures import PyFunctionObject
+from pyom.structures import PyFunctionObject, PyCodeObject, PyTypeObject
 
 
 class TestChunkBasics(unittest.TestCase):
@@ -89,11 +91,26 @@ class TestStructures(unittest.TestCase):
         foo_p = PyFunctionObject.from_object(foo)
         self.assertTrue(foo_p.ob_type == id(type(foo)))
 
-    def test_func_ob_type_get_as_type(self):
+    def test_code_co_code(self):
         def foo():
             pass
-        foo_p = PyFunctionObject.from_object(foo)
-        self.assertTrue(foo_p.ob_type_o == type(foo))
+        code_p = PyCodeObject.from_object(foo.__code__)
+        self.assertEqual(code_p.co_code, id(foo.__code__.co_code))
+
+    def test_type_flags(self):
+        type_p = PyTypeObject.from_object(int)
+        self.assertEqual(
+            type_p.tp_flags, ctypes.pythonapi.PyType_GetFlags(id(int))
+        )
+
+    def test_activate_inheritance(self):
+        type_p = PyTypeObject.from_object(types.CodeType)
+        type_p.activate_inheritance()
+
+        class MyCode(types.CodeType):
+            pass
+
+        self.assertTrue(issubclass(MyCode, types.CodeType))
 
 
 if __name__ == '__main__':
