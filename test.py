@@ -1,8 +1,6 @@
 import unittest
 import ctypes
-import types
 import pyom
-from pyom.structures import PyFunctionObject, PyCodeObject, PyTypeObject
 
 
 class TestChunkBasics(unittest.TestCase):
@@ -26,11 +24,6 @@ class TestChunkBasics(unittest.TestCase):
         self.assertRaises(pyom.BoundaryError, set_too_big)
         self.assertRaises(pyom.BoundaryError, set_negative)
 
-    def test_clone(self):
-        chunk0 = (100).memory
-        chunk1 = chunk0.clone()
-        self.assertEqual(chunk0, chunk1)
-
     def test_not_equal(self):
         self.assertNotEqual((100).memory, 'helloworld'.memory)
 
@@ -43,74 +36,6 @@ class TestHandlerBasics(unittest.TestCase):
     def test_attrs(self):
         self.assertTrue(hasattr((100).memory, 'length'))
         self.assertTrue(hasattr((100).memory, 'address'))
-
-
-class TestIntHack(unittest.TestCase):
-
-    def test_simple_copy(self):
-        chunk0 = (100).memory
-        chunk1 = chunk0.clone()
-        self.assertTrue(chunk0 == chunk1)
-
-    # hacks 100 to be another then int class
-    def test_int_class_swap(self):
-        class Tint(int):
-            def __repr__(self):
-                return 'tint object'
-
-        obj = 1000000
-
-        chunk_original = obj.memory
-        chunk_copy = chunk_original.clone()
-
-        id_of_int = pyom.integer_to_memory(id(int))
-        id_of_tint = pyom.integer_to_memory(id(Tint))
-
-        index = chunk_original[:50].index(id_of_int[0])
-        obj.memory = (index, id_of_tint)
-        self.assertTrue(isinstance(obj, Tint))
-        self.assertTrue(repr(obj) == 'tint object')
-        obj.memory.copy_from_chunk(chunk_copy)
-        self.assertFalse(isinstance(obj, Tint))
-
-    def test_dump_attr_presents(self):
-        self.assertTrue(hasattr(object, 'memory'))
-
-
-class TestStructures(unittest.TestCase):
-
-    def test_func_hasattr(self):
-        def foo():
-            pass
-        foo_p = PyFunctionObject.from_object(foo)
-        self.assertTrue(hasattr(foo_p, 'ob_type'))
-
-    def test_func_ob_type(self):
-        def foo():
-            pass
-        foo_p = PyFunctionObject.from_object(foo)
-        self.assertTrue(foo_p.ob_type == id(type(foo)))
-
-    def test_code_co_code(self):
-        def foo():
-            pass
-        code_p = PyCodeObject.from_object(foo.__code__)
-        self.assertEqual(code_p.co_code, id(foo.__code__.co_code))
-
-    def test_type_flags(self):
-        type_p = PyTypeObject.from_object(int)
-        self.assertEqual(
-            type_p.tp_flags, ctypes.pythonapi.PyType_GetFlags(id(int))
-        )
-
-    def test_activate_inheritance(self):
-        type_p = PyTypeObject.from_object(types.CodeType)
-        type_p.activate_inheritance()
-
-        class MyCode(types.CodeType):
-            pass
-
-        self.assertTrue(issubclass(MyCode, types.CodeType))
 
 
 if __name__ == '__main__':
